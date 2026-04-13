@@ -1,16 +1,19 @@
-# FROM node:24-alpine 
+FROM node:24-alpine 
 
-# WORKDIR /app
+WORKDIR /app
 
-# COPY package*.json ./
+COPY package*.json ./
 
-# RUN npm install
+RUN npm install
 
-# COPY . . 
 
-# RUN npm run build 
+COPY . . 
 
-# CMD ["node", "dist/main.js"]
+RUN npx prisma generate
+
+RUN npm run build 
+
+CMD ["node", "dist/main.js"]
 
 
 
@@ -18,59 +21,59 @@
 # -----------------------------
 # 1. Base Image
 # -----------------------------
-FROM node:20-alpine AS base
+# FROM node:20-alpine AS base
 
-# Enable corepack for pnpm
-RUN corepack enable
+# # Enable corepack for pnpm
+# RUN corepack enable
 
-WORKDIR /app
+# WORKDIR /app
 
-# -----------------------------
-# 2. Install Dependencies
-# -----------------------------
-FROM base AS deps
+# # -----------------------------
+# # 2. Install Dependencies
+# # -----------------------------
+# FROM base AS deps
 
-COPY package.json pnpm-lock.yaml ./
+# COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile
+# RUN pnpm install --frozen-lockfile
 
-# -----------------------------
-# 3. Build Application
-# -----------------------------
-FROM base AS builder
+# # -----------------------------
+# # 3. Build Application
+# # -----------------------------
+# FROM base AS builder
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# COPY --from=deps /app/node_modules ./node_modules
+# COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# # Generate Prisma Client
+# RUN npx prisma generate
 
-# Build NestJS
-RUN pnpm build
+# # Build NestJS
+# RUN pnpm build
 
-# -----------------------------
-# 4. Production Image
-# -----------------------------
-FROM node:20-alpine AS runner
+# # -----------------------------
+# # 4. Production Image
+# # -----------------------------
+# FROM node:20-alpine AS runner
 
-RUN corepack enable
+# RUN corepack enable
 
-WORKDIR /app
+# WORKDIR /app
 
-ENV NODE_ENV=production
+# ENV NODE_ENV=production
 
-# Copy only necessary files
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
+# # Copy only necessary files
+# COPY --from=builder /app/package.json ./
+# COPY --from=builder /app/node_modules ./node_modules
+# COPY --from=builder /app/dist ./dist
+# COPY --from=builder /app/prisma ./prisma
 
-# Prisma client (important if using migrations/runtime)
-RUN npx prisma generate
+# # Prisma client (important if using migrations/runtime)
+# RUN npx prisma generate
 
-EXPOSE 3000
+# EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+# CMD ["node", "dist/main.js"]
 
 
 
